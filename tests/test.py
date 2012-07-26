@@ -32,6 +32,9 @@ def init(img_cls, data):
 
 def check(label, modest, axes):
     """ Assert that images are identical, else save and fail """
+    assert modest.figure is not axes.figure
+    assert modest.figure is not axes.figure
+
     modest.figure.canvas.draw()
     axes.figure.canvas.draw()
     str1 = modest.figure.canvas.tostring_rgb()
@@ -86,6 +89,19 @@ def test_zoom():
     axim.axes.set_ylim(lohi)
 
     check('zoom', modest.axes, axim.axes)
+
+def test_zoom_out():
+    """ zoom out """
+    data = default_data()
+    modest = init(ModestImage, data)
+    axim = init(mi.AxesImage, data)
+    lohi = -1000, 1000
+    modest.axes.set_xlim(lohi)
+    axim.axes.set_xlim(lohi)
+    modest.axes.set_ylim(lohi)
+    axim.axes.set_ylim(lohi)
+
+    check('zoom_out', modest.axes, axim.axes)
 
 
 INTRP_METHODS = ('nearest', 'bilinear', 'bicubic',
