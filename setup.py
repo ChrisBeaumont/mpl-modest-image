@@ -9,5 +9,5 @@ except ImportError:  # Python 2.x
 
 setup(name='ModestImage',
       version='0.1',
-      packages=['modest_image', 'modest_image.tests']
+      packages=['modest_image']
   )

@@ -68,7 +68,8 @@ changed). ModestImage is typically 5-10x faster for images of this
 size. It is slightly slower than, though still competetive with,
 AxesImage for move and zoom operations that do not clear the cache.
 
-Unit tests can be found in the ``tests`` directory. ModestImage
-produces identical images under these tests, which exercise different
-interpolation schemes, moving and zooming, and color mapping.
+Unit tests can be found in the ``tests`` directory. ModestImage does not
+always produce results identical to AxesImage at the pixel level, due to
+how it downsamples images. The discrepancy is minor, however, and disappears
+if no downsampling takes place (i.e. a screen pixel samples <= 1 data pixel)
 
