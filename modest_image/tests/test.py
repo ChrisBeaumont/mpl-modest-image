@@ -123,3 +123,27 @@ def test_scale():
         im.norm.vmin = .8
 
     check("cmap", modest.axes, axim.axes)
+
+def test_unequal_limits():
+    """Test different x/y scalings"""
+    data = default_data()
+    modest = init(ModestImage, data)
+    axim = init(mi.AxesImage, data)
+
+    for im in [modest, axim]:
+        im.axes.set_aspect('auto')
+        im.axes.set_xlim(20, 30)
+        im.axes.set_ylim(10, 80)
+
+    check('unequal_limits', modest.axes, axim.axes)
+
+def test_alpha():
+    """alpha changes """
+    data = default_data()
+    modest = init(ModestImage, data)
+    axim = init(mi.AxesImage, data)
+
+    for im in [modest, axim]:
+        im.set_alpha(.3)
+
+    check('alpha', modest.axes, axim.axes)

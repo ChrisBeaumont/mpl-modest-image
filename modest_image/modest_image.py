@@ -50,7 +50,7 @@ class ModestImage(mi.AxesImage):
         # have we already calculated what we need?
         if sx == self._sx and sy == self._sy and \
             x0 >= self._bounds[0] and x1 <= self._bounds[1] and \
-            y0 >= self._bounds[0] and y1 <= self._bounds[1]:
+            y0 >= self._bounds[2] and y1 <= self._bounds[3]:
             return
 
         self._A = self._full_res[y0:y1:sy, x0:x1:sx]
