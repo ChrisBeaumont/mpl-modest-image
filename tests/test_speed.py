@@ -11,6 +11,7 @@ from modest_image import ModestImage
 x, y = np.mgrid[0:1000, 0:1000]
 data = np.sin(x / 10.) * np.cos(y / 30.)
 
+
 def setup(img_cls):
 
     plt.clf()
@@ -42,13 +43,13 @@ def time_draw(img_cls, repeat=5):
 
     a, t = setup(img_cls)
     for i in range(repeat):
-        a.changed() # clear caches, simulate first render
+        a.changed()  # clear caches, simulate first render
         a.axes.figure.canvas.draw()
     report('time_draw', t, time(), repeat)
 
+
 def time_move(img_cls, repeat=10):
     """ Render time for moving an image without cache clear """
-    delta = 100
     lims = [(0, 2000), (500, 2500)]
     a, t = setup(img_cls)
     ax = plt.gca()
@@ -59,6 +60,7 @@ def time_move(img_cls, repeat=10):
         ax.set_ylim(lims[i % 2])
         a.axes.figure.canvas.draw()
     report('time_move', t, time(), repeat)
+
 
 def time_move_zoom(img_cls, repeat=10):
     """ Move image, at high zoom setting """

@@ -1,4 +1,8 @@
+import matplotlib
+rcParams = matplotlib.rcParams
+
 import matplotlib.image as mi
+import matplotlib.colors as mcolors
 
 
 class ModestImage(mi.AxesImage):
@@ -19,6 +23,9 @@ class ModestImage(mi.AxesImage):
     I'm not aware of. Don't expect those to work either.
     """
     def __init__(self, *args, **kwargs):
+        if 'extent' in kwargs and kwargs['extent'] is not None:
+            raise NotImplementedError("ModestImage does not support extents")
+
         self._full_res = None
         self._sx, self._sy = None, None
         self._bounds = (None, None, None, None)
@@ -28,6 +35,10 @@ class ModestImage(mi.AxesImage):
         super(ModestImage, self).set_data(A)
         self._full_res = A
         self._sx, self._sy = None, None  # force redraw
+
+    def get_array(self):
+        """Override to return the full-resolution array"""
+        return self._full_res
 
     def _scale_to_res(self):
         """ Change self._A and _extent to render an image whose
@@ -99,6 +110,51 @@ def main():
 
     plt.show()
 
+
+def imshow(axes, X, cmap=None, norm=None, aspect=None,
+           interpolation=None, alpha=None, vmin=None, vmax=None,
+           origin=None, extent=None, shape=None, filternorm=1,
+           filterrad=4.0, imlim=None, resample=None, url=None, **kwargs):
+    """Similar to matplotlib's imshow command, but produces a ModestImage
+
+    Unlike matplotlib version, must explicitly specify axes
+    """
+
+    if not axes._hold:
+        axes.cla()
+    if norm is not None:
+        assert(isinstance(norm, mcolors.Normalize))
+    if aspect is None:
+        aspect = rcParams['image.aspect']
+    axes.set_aspect(aspect)
+    im = ModestImage(axes, cmap, norm, interpolation, origin, extent,
+                            filternorm=filternorm,
+                            filterrad=filterrad, resample=resample, **kwargs)
+
+    im.set_data(X)
+    im.set_alpha(alpha)
+    axes._set_artist_props(im)
+
+    if im.get_clip_path() is None:
+        # image does not already have clipping set, clip to axes patch
+        im.set_clip_path(axes.patch)
+
+    #if norm is None and shape is None:
+    #    im.set_clim(vmin, vmax)
+    if vmin is not None or vmax is not None:
+        im.set_clim(vmin, vmax)
+    else:
+        im.autoscale_None()
+    im.set_url(url)
+
+    # update ax.dataLim, and, if autoscaling, set viewLim
+    # to tightly fit the image, regardless of dataLim.
+    im.set_extent(im.get_extent())
+
+    axes.images.append(im)
+    im._remove_method = lambda h: axes.images.remove(h)
+
+    return im
 
 if __name__ == "__main__":
     main()
