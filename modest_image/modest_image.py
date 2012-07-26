@@ -21,15 +21,18 @@ class ModestImage(mi.AxesImage):
     def __init__(self, *args, **kwargs):
         self._full_res = None
         self._sx, self._sy = None, None
+        self._bounds = (None, None, None, None)
         super(ModestImage, self).__init__(*args, **kwargs)
 
     def set_data(self, A):
         super(ModestImage, self).set_data(A)
         self._full_res = A
+        self._sx, self._sy = None, None  # force redraw
 
     def _scale_to_res(self):
-        #XXX todo -- can skip some redraws if all pixels aready
-        #present in self._A (since we sample slightly beyond image boundaries)
+        """ Change self._A and _extent to render an image whose
+        resolution is matched to the eventual rendering."""
+
         ax = self.axes
         ext = ax.transAxes.transform([1, 1]) - ax.transAxes.transform([0, 0])
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
@@ -41,15 +44,23 @@ class ModestImage(mi.AxesImage):
         x1 = min(self._full_res.shape[1], xlim[1] + dx)
         y0, y1, x0, x1 = map(int, [y0, y1, x0, x1])
 
-        sy = min((y1 - y0) / 5., max(1, dy / ext[1]))
-        sx = min((x1 - x0) / 5., max(1, dx / ext[0]))
+        sy = max(1, min((y1 - y0) / 5., dy / ext[1]))
+        sx = max(1, min((x1 - x0) / 5., dx / ext[0]))
+
+        # have we already calculated what we need?
+        if sx == self._sx and sy == self._sy and \
+            x0 >= self._bounds[0] and x1 <= self._bounds[1] and \
+            y0 >= self._bounds[0] and y1 <= self._bounds[1]:
+            return
 
         self._A = self._full_res[y0:y1:sy, x0:x1:sx]
+        x1 = x0 + self._A.shape[1]
+        y1 = y0 + self._A.shape[0]
 
-        self.set_extent([x0, x1, y0, y1])
-
+        self.set_extent([x0 - .5, x1 - .5, y0 - .5, y1 - .5])
         self._sx = sx
         self._sy = sy
+        self._bounds = (x0, x1, y0, y1)
         self.changed()
 
     def draw(self, renderer, *args, **kwargs):
