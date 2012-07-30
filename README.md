@@ -5,11 +5,30 @@ mpl-modest-image
 
 ModestImage extends the matplotlib AxesImage class, and avoids
 unnecessary calculation when rendering large-ish images (where most
-image pixels aren't visible on the screen).
+image pixels aren't visible on the screen). It has the following
+benefits over AxesImage:
 
-I bet there's some way to achieve the same effect with native
-matplotlib objects, but I couldn't figure it out. If you know of a
-way, let me know!
+ * Draw time is (roughly) independent of image size
+ * Large ``numpy.memmap`` can be visualized, without making an
+   in-memory copy of the entire array. This enables visualization of
+   images too large to fit in memory.
+
+Using ModestImage
+-----------------
+
+The easiest way is to use the modified ``imshow`` function:
+
+    import matplotlib.pyplot as plt
+    from modest_image import ModestImage, imshow
+
+    ax = plt.gca()
+    imshow(ax, image_array)
+    plt.show()
+
+``imshow`` accepts all the keyword arguments that the matplotlib
+function does. To create a ModestImage artist directly:
+
+    artist = ModestImage(data=array)
 
 
 Why is AxesImage Slow?
