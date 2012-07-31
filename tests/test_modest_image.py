@@ -193,6 +193,18 @@ def test_alpha():
 
     check('alpha', modest.axes, axim.axes)
 
+def test_nan():
+    """Some nan values"""
+    data = default_data()
+    data.flat[data.size/2:] = np.nan
+
+    modest = init(ModestImage, data)
+    axim = init(mi.AxesImage, data)
+
+    for im in [modest, axim]:
+        im.set_alpha(.3)
+
+    check('nan', modest.axes, axim.axes)
 
 def test_get_array():
     """ get_array should return full-res data"""
