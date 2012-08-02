@@ -41,6 +41,7 @@ Looking at very big FITS images
     import pyfits
     from modest_image import imshow
 
+    ax = plt.gca()
     huge_array = pyfits.open('file_name.fits', memmap=True)[0].data
     artist = imshow(ax, huge_array, vmin=0, vmax=10)
     plt.show()
