@@ -68,14 +68,14 @@ class ModestImage(mi.AxesImage):
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
         dx, dy = xlim[1] - xlim[0], ylim[1] - ylim[0]
 
-        y0 = max(0, ylim[0] - dy)
-        y1 = min(self._full_res.shape[0], ylim[1] + dy)
-        x0 = max(0, xlim[0] - dx)
-        x1 = min(self._full_res.shape[1], xlim[1] + dx)
+        y0 = max(0, ylim[0] - 5)
+        y1 = min(self._full_res.shape[0], ylim[1] + 5)
+        x0 = max(0, xlim[0] - 5)
+        x1 = min(self._full_res.shape[1], xlim[1] + 5)
         y0, y1, x0, x1 = map(int, [y0, y1, x0, x1])
 
-        sy = int(max(1, min((y1 - y0) / 5., dy / ext[1] / 1.2)))
-        sx = int(max(1, min((x1 - x0) / 5., dx / ext[0] / 1.2)))
+        sy = int(max(1, min((y1 - y0) / 5., np.ceil(dy / ext[1]))))
+        sx = int(max(1, min((x1 - x0) / 5., np.ceil(dx / ext[0]))))
 
         # have we already calculated what we need?
         if sx >= self._sx and sy >= self._sy and \
