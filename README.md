@@ -1,5 +1,5 @@
-ModestImage
-===========
+# ModestImage
+
 
 *Friendlier matplotlib interaction with large images*
 
@@ -13,17 +13,19 @@ benefits over AxesImage:
    in-memory copy of the entire array. This enables visualization of
    images too large to fit in memory.
 
-Using ModestImage
------------------
+## Using ModestImage
+
 
 The easiest way is to use the modified ``imshow`` function:
 
-    import matplotlib.pyplot as plt
-    from modest_image import ModestImage, imshow
+```
+import matplotlib.pyplot as plt
+from modest_image import ModestImage, imshow
 
-    ax = plt.gca()
-    imshow(ax, image_array, vmin=0, vmax=10)
-    plt.show()
+ax = plt.gca()
+imshow(ax, image_array, vmin=0, vmax=10)
+plt.show()
+```
 
 ``imshow`` accepts all the keyword arguments that the matplotlib
 function does. The ``vmin`` and ``vmax`` keywords aren't necessary
@@ -32,24 +34,28 @@ determine the min/max values. This can be slow if the array is huge.
 
 To create a ModestImage artist directly:
 
-    artist = ModestImage(data=array)
+```
+artist = ModestImage(data=array)
+```
 
-Looking at very big FITS images
--------------------------------
+## Looking at very big FITS images
 
-    import matplotlib.pyplot as plt
-    import pyfits
-    from modest_image import imshow
 
-    ax = plt.gca()
-    huge_array = pyfits.open('file_name.fits', memmap=True)[0].data
-    artist = imshow(ax, huge_array, vmin=0, vmax=10)
-    plt.show()
+```
+import matplotlib.pyplot as plt
+import pyfits
+from modest_image import imshow
+
+ax = plt.gca()
+huge_array = pyfits.open('file_name.fits', memmap=True)[0].data
+artist = imshow(ax, huge_array, vmin=0, vmax=10)
+plt.show()
+```
 
 This opens almost instantly, with a modest memory footprint.
 
-Why is Matplotlib Image Drawing Slow?
--------------------------------------
+## Why is Matplotlib Image Drawing Slow?
+
 
 For the first draw request after setting the color mapping or data
 array, AxesImage (the default matplotlib image class) calculates the
@@ -66,8 +72,7 @@ AxesImage wastes lots of time calculating RGBA values for every pixel
 in a (potentially large) data set. It also makes several temporary
 arrays with size comparable to the original array, wasting memory.
 
-How is ModestImage faster?
---------------------------
+## How is ModestImage faster?
 
 ModestImage resamples the image array at each draw request, extracting
 a smaller image whose resolution and extent are matched to the screen
@@ -79,12 +84,12 @@ redraws after move and zoom operations are slightly slower. However,
 draws after colormap and data changes are substantially faster, and most
 redraws are fast enough for interactive use.
 
-Performance and Tests
----------------------
+## Performance and Tests
 
 ``speed_test.py`` compares the peformance of ModestImage and
-AxesImage. For a 1000x1000 pixel image::
+AxesImage. For a 1000x1000 pixel image:
 
+```
     Performace Tests for AxesImage
 
            time_draw: 186 ms per operation
@@ -96,7 +101,7 @@ AxesImage. For a 1000x1000 pixel image::
           time_draw: 25 ms per operation
           time_move: 20 ms per operation
      time_move_zoom: 28 ms per operation
-
+```
 
 ``time_draw`` is the render time after the cache has been cleared
 (e.g. after ``set_data`` has been called, or the colormap has been
