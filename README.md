@@ -13,6 +13,16 @@ benefits over AxesImage:
    in-memory copy of the entire array. This enables visualization of
    images too large to fit in memory.
 
+## Installation
+
+```
+pip install ModestImage
+```
+or
+```
+easy_install ModestImage
+```
+
 ## Using ModestImage
 
 
