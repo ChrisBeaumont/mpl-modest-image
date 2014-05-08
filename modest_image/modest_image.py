@@ -6,7 +6,9 @@ import matplotlib.colors as mcolors
 import matplotlib.cbook as cbook
 import numpy as np
 
+
 class ModestImage(mi.AxesImage):
+
     """
     Computationally modest image class.
 
@@ -23,6 +25,7 @@ class ModestImage(mi.AxesImage):
     may also be weird coordinate warping operations for images that
     I'm not aware of. Don't expect those to work either.
     """
+
     def __init__(self, *args, **kwargs):
         if 'extent' in kwargs and kwargs['extent'] is not None:
             raise NotImplementedError("ModestImage does not support extents")
@@ -46,10 +49,10 @@ class ModestImage(mi.AxesImage):
             raise TypeError("Image data can not convert to float")
 
         if (self._A.ndim not in (2, 3) or
-            (self._A.ndim == 3 and self._A.shape[-1] not in (3, 4))):
-            raise TypeError("Invalid dimensions for image data")
+                (self._A.ndim == 3 and self._A.shape[-1] not in (3, 4))):
+                raise TypeError("Invalid dimensions for image data")
 
-        self._imcache =None
+        self._imcache = None
         self._rgbacache = None
         self._oldxslice = None
         self._oldyslice = None
@@ -64,31 +67,19 @@ class ModestImage(mi.AxesImage):
         resolution is matched to the eventual rendering."""
 
         ax = self.axes
-        ext = ax.transAxes.transform([1, 1]) - ax.transAxes.transform([0, 0])
-        xlim, ylim = ax.get_xlim(), ax.get_ylim()
-        dx, dy = xlim[1] - xlim[0], ylim[1] - ylim[0]
-
-        y0 = max(0, ylim[0] - 5)
-        y1 = min(self._full_res.shape[0], ylim[1] + 5)
-        x0 = max(0, xlim[0] - 5)
-        x1 = min(self._full_res.shape[1], xlim[1] + 5)
-        y0, y1, x0, x1 = map(int, [y0, y1, x0, x1])
-
-        sy = int(max(1, min((y1 - y0) / 5., np.ceil(dy / ext[1]))))
-        sx = int(max(1, min((x1 - x0) / 5., np.ceil(dx / ext[0]))))
-
+        shp = self._full_res.shape
+        x0, x1, sx, y0, y1, sy = extract_matched_slices(ax, shp)
         # have we already calculated what we need?
         if sx >= self._sx and sy >= self._sy and \
             x0 >= self._bounds[0] and x1 <= self._bounds[1] and \
-            y0 >= self._bounds[2] and y1 <= self._bounds[3]:
+                y0 >= self._bounds[2] and y1 <= self._bounds[3]:
             return
-
         self._A = self._full_res[y0:y1:sy, x0:x1:sx]
         self._A = cbook.safe_masked_invalid(self._A)
-        x1 = x0 + self._A.shape[1] * sx
-        y1 = y0 + self._A.shape[0] * sy
-
-        self.set_extent([x0 - .5, x1 - .5, y0 - .5, y1 - .5])
+        if self.origin == 'upper':
+            self.set_extent([x0, x1, y1, y0])
+        else:
+            self.set_extent([x0, x1, y0, y1])
         self._sx = sx
         self._sy = sy
         self._bounds = (x0, x1, y0, y1)
@@ -102,14 +93,13 @@ class ModestImage(mi.AxesImage):
 def main():
     from time import time
     import matplotlib.pyplot as plt
-    import numpy as np
     x, y = np.mgrid[0:2000, 0:2000]
     data = np.sin(x / 10.) * np.cos(y / 30.)
 
     f = plt.figure()
     ax = f.add_subplot(111)
 
-    #try switching between
+    # try switching between
     artist = ModestImage(ax, data=data)
     #artist = mi.AxesImage(ax, data=data)
 
@@ -148,8 +138,8 @@ def imshow(axes, X, cmap=None, norm=None, aspect=None,
         aspect = rcParams['image.aspect']
     axes.set_aspect(aspect)
     im = ModestImage(axes, cmap, norm, interpolation, origin, extent,
-                            filternorm=filternorm,
-                            filterrad=filterrad, resample=resample, **kwargs)
+                     filternorm=filternorm,
+                     filterrad=filterrad, resample=resample, **kwargs)
 
     im.set_data(X)
     im.set_alpha(alpha)
@@ -159,12 +149,13 @@ def imshow(axes, X, cmap=None, norm=None, aspect=None,
         # image does not already have clipping set, clip to axes patch
         im.set_clip_path(axes.patch)
 
-    #if norm is None and shape is None:
+    # if norm is None and shape is None:
     #    im.set_clim(vmin, vmax)
     if vmin is not None or vmax is not None:
         im.set_clim(vmin, vmax)
-    else:
+    elif norm is None:
         im.autoscale_None()
+
     im.set_url(url)
 
     # update ax.dataLim, and, if autoscaling, set viewLim
@@ -175,6 +166,39 @@ def imshow(axes, X, cmap=None, norm=None, aspect=None,
     im._remove_method = lambda h: axes.images.remove(h)
 
     return im
+
+
+def extract_matched_slices(ax, shape):
+    """Determine the slice parameters to use, matched to the screen.
+
+    :param ax: Axes object to query. It's extent and pixel size
+               determine the slice parameters
+
+    :param shape: Tuple of the full image shape to slice into. Upper
+               boundaries for slices will be cropped to fit within
+               this shape.
+
+    :rtype: tulpe of x0, x1, sx, y0, y1, sy
+
+    Indexing the full resolution array as array[y0:y1:sy, x0:x1:sx] returns
+    a view well-matched to the axes' resolution and extent
+    """
+    ext = ax.transAxes.transform([1, 1]) - ax.transAxes.transform([0, 0])
+    xlim, ylim = ax.get_xlim(), ax.get_ylim()
+    dx, dy = xlim[1] - xlim[0], ylim[1] - ylim[0]
+
+    def _clip(val, hi):
+        return int(max(min(val, hi), 0))
+
+    y0 = _clip(min(ylim) - 5, shape[0])
+    y1 = _clip(max(ylim) + 5, shape[0])
+    x0 = _clip(min(xlim) - 5, shape[1])
+    x1 = _clip(max(xlim) + 5, shape[1])
+
+    sy = int(max(1, min((y1 - y0) / 5., np.ceil(abs(dy / ext[1])))))
+    sx = int(max(1, min((x1 - x0) / 5., np.ceil(abs(dx / ext[0])))))
+
+    return x0, x1, sx, y0, y1, sy
 
 if __name__ == "__main__":
     main()
