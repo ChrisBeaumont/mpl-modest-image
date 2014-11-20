@@ -60,7 +60,8 @@ def check(label, modest, axes, thresh=0):
     data1.shape = shp
     data2.shape = shp
 
-    rms = np.sum(np.abs(data1 - data2)) / data1.size
+    # Here we need to convert to float to avoid underflow
+    rms = np.mean(np.abs(data1.astype(float) - data2.astype(float)))
 
     result = 'PASS' if rms < thresh else 'FAIL'
     modest_label = 'test_%s_modest' % label
@@ -128,7 +129,7 @@ def test_zoom_out():
     modest.axes.set_ylim(lohi)
     axim.axes.set_ylim(lohi)
 
-    check('zoom_out', modest.axes, axim.axes, thresh=1.0)
+    check('zoom_out', modest.axes, axim.axes, thresh=0.3)
 
 
 INTRP_METHODS = ('nearest', 'bilinear', 'bicubic',
