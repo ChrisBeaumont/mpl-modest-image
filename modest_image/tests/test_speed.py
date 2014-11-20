@@ -7,7 +7,7 @@ import matplotlib.image as mi
 
 import numpy as np
 
-from modest_image import ModestImage
+from ..modest_image import ModestImage
 
 
 x, y = np.mgrid[0:1000, 0:1000]

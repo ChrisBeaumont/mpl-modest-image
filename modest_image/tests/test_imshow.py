@@ -3,7 +3,7 @@ from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 
-from modest_image import ModestImage, imshow
+from ..modest_image import ModestImage, imshow
 
 
 def default_data():

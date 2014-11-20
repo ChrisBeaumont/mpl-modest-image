@@ -7,7 +7,7 @@ import matplotlib.image as mi
 
 import numpy as np
 
-from modest_image import ModestImage
+from ..modest_image import ModestImage
 
 x, y = np.mgrid[0:300, 0:300]
 _data = np.sin(x / 10.) * np.cos(y / 30.)

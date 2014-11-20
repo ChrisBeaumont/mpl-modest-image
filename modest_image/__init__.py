@@ -1,1 +1,1 @@
-from modest_image import ModestImage, imshow
+from .modest_image import ModestImage, imshow
