@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from time import time
 
 from matplotlib import pyplot as plt
@@ -31,8 +33,8 @@ def setup(img_cls):
 
 
 def report(label, t0, t1, niter):
-    print '%15s: %i ms per operation' % (label,
-                                         (t1 - t0) * 1000 / niter)
+    print('%15s: %i ms per operation' % (label,
+                                         (t1 - t0) * 1000 / niter))
 
 
 def time_draw(img_cls, repeat=5):
@@ -78,11 +80,11 @@ def time_move_zoom(img_cls, repeat=10):
 
 
 def main():
-    print 'Test image dimensions: %i x %i' % data.shape
+    print('Test image dimensions: %i x %i' % data.shape)
     for im in [mi.AxesImage, ModestImage]:
-        print '**********************************'
-        print "Performace Tests for %s" % im.__name__
-        print '**********************************'
+        print('**********************************')
+        print("Performace Tests for %s" % im.__name__)
+        print('**********************************')
         time_draw(im)
         time_move(im)
         time_move_zoom(im)
