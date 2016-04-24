@@ -1,3 +1,7 @@
+"""
+Modification of Chris Beaumont's mpl-modest-image package to allow the use of
+set_extent.
+"""
 from __future__ import print_function, division
 
 import matplotlib
@@ -59,27 +63,29 @@ class ModestImage(mi.AxesImage):
         self._oldyslice = None
         self._sx, self._sy = None, None
         self._scale_transform = None
-    
+
     def set_extent(self, extent):
         mi.AxesImage.set_extent(self, extent)
         self._scale_transform = None
-    
+
     def get_array(self):
         """Override to return the full-resolution array"""
         return self._full_res
-    
+
     def _get_transform(self):
         """Creates a transformation from the data limits (real extent) to the
         array limit (shape of array)."""
         if self._scale_transform is not None:
             return self._scale_transform
-        
+
+        if not self._extent:
+            return mtransforms.IdentityTransform()
+
         x0 = y0 = 0.0
         y1, x1 = self._full_res.shape
         arrayLim = extent_to_bbox(x0, x1, y0, y1, self.origin)
-        
-        x0, x1, y0, y1 = self.get_extent()
-        dataLim = extent_to_bbox(x0, x1, y0, y1, self.origin)
+
+        dataLim = self.axes.dataLim
 
         self._scale_transform = mtransforms.BboxTransform(dataLim, arrayLim)
         return self._scale_transform
@@ -87,11 +93,12 @@ class ModestImage(mi.AxesImage):
     def _scale_to_res(self):
         """ Change self._A and _extent to render an image whose
         resolution is matched to the eventual rendering."""
-        
+
         ax = self.axes
         shp = self._full_res.shape
         transform = self._get_transform()
         x0, x1, sx, y0, y1, sy = extract_matched_slices(ax, shp, transform)
+
         # have we already calculated what we need?
         if (self._bounds is not None
             and sx >= self._sx and sy >= self._sy
@@ -100,8 +107,8 @@ class ModestImage(mi.AxesImage):
             return
         self._A = self._full_res[y0:y1:sy, x0:x1:sx]
         self._A = cbook.safe_masked_invalid(self._A)
-        
-        extentLim = extent_to_bbox(x0, x1, y0, y1, self.origin)
+
+        extentLim = extent_to_bbox(x0 - 0.5, x1 - 0.5, y0 - 0.5, y1 - 0.5, self.origin)
         extentLim = transform.inverted().transform_bbox(extentLim)
         extent = bbox_to_extent(extentLim, self.origin)
         self.set_extent(extent)
@@ -132,7 +139,7 @@ def main():
     ax.set_aspect('equal')
     artist.norm.vmin = -1
     artist.norm.vmax = 1
-    artist.set_extent([0.0, 5.0, 0.0, 5.0])
+#    artist.set_extent([0.0, 5.0, 0.0, 5.0])
 
     ax.add_artist(artist)
 #    ax.set_xlim(0, 1000)
