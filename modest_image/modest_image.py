@@ -5,6 +5,7 @@ rcParams = matplotlib.rcParams
 
 import matplotlib.image as mi
 import matplotlib.colors as mcolors
+import matplotlib.transforms as mtransforms
 import matplotlib.cbook as cbook
 import numpy as np
 
@@ -29,12 +30,10 @@ class ModestImage(mi.AxesImage):
     """
 
     def __init__(self, *args, **kwargs):
-        if 'extent' in kwargs and kwargs['extent'] is not None:
-            raise NotImplementedError("ModestImage does not support extents")
-
         self._full_res = None
         self._sx, self._sy = None, None
         self._bounds = None
+        self._scale_transform = None
         super(ModestImage, self).__init__(*args, **kwargs)
 
     def set_data(self, A):
@@ -59,18 +58,37 @@ class ModestImage(mi.AxesImage):
         self._oldxslice = None
         self._oldyslice = None
         self._sx, self._sy = None, None
-
+        self._scale_transform = None
+    
+    def set_extent(self, extent):
+        mi.AxesImage.set_extent(self, extent)
+        self._scale_transform = None
+    
     def get_array(self):
         """Override to return the full-resolution array"""
         return self._full_res
+    
+    def _get_transform(self):
+        """Creates a transformation from the data limits (real extent) to the
+        array limit (shape of array)."""
+        if self._scale_transform is not None:
+            return self._scale_transform
+        
+        x0 = y0 = 0.0
+        y1, x1 = self._full_res.shape
+        arrayLim = extent_to_bbox(x0, x1, y0, y1, self.origin)
+        dataLim = self.axes.dataLim
+        self._scale_transform = mtransforms.BboxTransform(dataLim, arrayLim)
+        return self._scale_transform
 
     def _scale_to_res(self):
         """ Change self._A and _extent to render an image whose
         resolution is matched to the eventual rendering."""
-
+        
         ax = self.axes
         shp = self._full_res.shape
-        x0, x1, sx, y0, y1, sy = extract_matched_slices(ax, shp)
+        transform = self._get_transform()
+        x0, x1, sx, y0, y1, sy = extract_matched_slices(ax, shp, transform)
         # have we already calculated what we need?
         if (self._bounds is not None
             and sx >= self._sx and sy >= self._sy
@@ -79,10 +97,12 @@ class ModestImage(mi.AxesImage):
             return
         self._A = self._full_res[y0:y1:sy, x0:x1:sx]
         self._A = cbook.safe_masked_invalid(self._A)
-        if self.origin == 'upper':
-            self.set_extent([x0 - .5, x1 - .5, y1 - .5, y0 - .5])
-        else:
-            self.set_extent([x0 - .5, x1 - .5, y0 - .5, y1 - .5])
+        
+        extentLim = extent_to_bbox(x0 - .5, x1 - .5, y0 - .5, y1 - .5, self.origin)
+        extentLim = transform.inverted().transform_bbox(extentLim)
+        extent = bbox_to_extent(extentLim, self.origin)
+        self.set_extent(extent)
+
         self._sx = sx
         self._sy = sy
         self._bounds = (x0, x1, y0, y1)
@@ -109,10 +129,11 @@ def main():
     ax.set_aspect('equal')
     artist.norm.vmin = -1
     artist.norm.vmax = 1
+    artist.set_extent([0.0, 5.0, 0.0, 5.0])
 
     ax.add_artist(artist)
-    ax.set_xlim(0, 1000)
-    ax.set_ylim(0, 1000)
+#    ax.set_xlim(0, 1000)
+#    ax.set_ylim(0, 1000)
 
     t0 = time()
     plt.gcf().canvas.draw()
@@ -171,7 +192,26 @@ def imshow(axes, X, cmap=None, norm=None, aspect=None,
     return im
 
 
-def extract_matched_slices(ax, shape):
+def extent_to_bbox(x0, x1, y0, y1, origin):
+    xmin = x0
+    xmax = x1
+    ymin = y1 if origin == 'upper' else y0
+    ymax = y0 if origin == 'upper' else y1
+    corners = (xmin, ymin), (xmax, ymax)
+    bbox = mtransforms.Bbox.null()
+    bbox.update_from_data_xy(corners)
+    return bbox
+
+
+def bbox_to_extent(bbox, origin):
+    x0 = bbox.xmin
+    x1 = bbox.xmax
+    y0 = bbox.ymax if origin == 'upper' else bbox.ymin
+    y1 = bbox.ymin if origin == 'upper' else bbox.ymax
+    return [x0, x1, y0, y1]
+
+
+def extract_matched_slices(ax, shape, transform):
     """Determine the slice parameters to use, matched to the screen.
 
     :param ax: Axes object to query. It's extent and pixel size
@@ -187,7 +227,9 @@ def extract_matched_slices(ax, shape):
     a view well-matched to the axes' resolution and extent
     """
     ext = (ax.transAxes.transform([(1, 1)]) - ax.transAxes.transform([(0, 0)]))[0]
-    xlim, ylim = ax.get_xlim(), ax.get_ylim()
+    viewLim = transform.transform_bbox(ax.viewLim)
+    xlim = viewLim.intervalx
+    ylim = viewLim.intervaly
     dx, dy = xlim[1] - xlim[0], ylim[1] - ylim[0]
 
     def _clip(val, hi):
