@@ -1,5 +1,6 @@
 # ModestImage
 
+[![Build Status](https://travis-ci.org/ChrisBeaumont/mpl-modest-image.svg?branch=master)](https://travis-ci.org/ChrisBeaumont/mpl-modest-image)
 
 *Friendlier matplotlib interaction with large images*
 
