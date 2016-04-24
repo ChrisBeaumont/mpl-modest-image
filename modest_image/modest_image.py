@@ -77,7 +77,10 @@ class ModestImage(mi.AxesImage):
         x0 = y0 = 0.0
         y1, x1 = self._full_res.shape
         arrayLim = extent_to_bbox(x0, x1, y0, y1, self.origin)
-        dataLim = self.axes.dataLim
+        
+        x0, x1, y0, y1 = self.get_extent()
+        dataLim = extent_to_bbox(x0, x1, y0, y1, self.origin)
+
         self._scale_transform = mtransforms.BboxTransform(dataLim, arrayLim)
         return self._scale_transform
 
@@ -98,7 +101,7 @@ class ModestImage(mi.AxesImage):
         self._A = self._full_res[y0:y1:sy, x0:x1:sx]
         self._A = cbook.safe_masked_invalid(self._A)
         
-        extentLim = extent_to_bbox(x0 - .5, x1 - .5, y0 - .5, y1 - .5, self.origin)
+        extentLim = extent_to_bbox(x0, x1, y0, y1, self.origin)
         extentLim = transform.inverted().transform_bbox(extentLim)
         extent = bbox_to_extent(extentLim, self.origin)
         self.set_extent(extent)
