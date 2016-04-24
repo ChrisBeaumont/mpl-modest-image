@@ -224,3 +224,22 @@ def test_get_array():
     modest.axes.figure.canvas.draw()
     np.testing.assert_array_equal(modest.get_array(),
                                   ax.get_array())
+
+def test_extent():
+    """extent"""
+    data = default_data()
+    modest = init(ModestImage, data)
+    axim = init(mi.AxesImage, data)
+    
+    modest.axes.set_autoscale_on(True) # Reactivate autoscale
+    axim.axes.set_autoscale_on(True)
+    
+    extent = [0.0, 5.0, 0.0, 5.0]
+    modest.set_extent(extent)
+    axim.set_extent(extent)
+    check('extent', modest.axes, axim.axes, thresh=0.3)
+    
+    extent = [0.0, 50.0, 0.0, 5.0]
+    modest.set_extent(extent)
+    axim.set_extent(extent)
+    check('extent', modest.axes, axim.axes, thresh=0.8)
