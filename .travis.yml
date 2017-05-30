@@ -22,7 +22,7 @@ install:
   - source ci-helpers/travis/setup_conda.sh
 
 script:
-    - py.test --cov modest_image
+    - py.test --cov modest_image modest_image
 
 # after_success:
 #    - coveralls
