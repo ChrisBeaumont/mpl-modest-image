@@ -199,7 +199,7 @@ def test_alpha():
 def test_nan():
     """Some nan values"""
     data = default_data()
-    data.flat[data.size/2:] = np.nan
+    data.flat[data.size // 2:] = np.nan
 
     modest = init(ModestImage, data)
     axim = init(mi.AxesImage, data)

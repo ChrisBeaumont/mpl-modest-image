@@ -22,7 +22,7 @@ def check_artist_props(art1, art2):
     """Assert that properties of two artists are equal"""
 
     props = ['alpha', 'clim', 'clip_on', 'clip_path',
-             'interpolation', 'label', 'rasterized',
+             'interpolation', 'rasterized',
              'resample', 'snap', 'url', 'visible', 'zorder']
     check_props(art1, art2, props)
 
