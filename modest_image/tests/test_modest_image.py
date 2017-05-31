@@ -262,6 +262,10 @@ def test_extent(origin, extent, flip):
     modest = init(ModestImage, data, origin=origin)
     axim = init(mi.AxesImage, data, origin=origin)
 
+    if extent is not None:
+        modest.axes.set_autoscale_on(True)
+        axim.axes.set_autoscale_on(True)
+
     if 'x' in flip:
         axim.axes.invert_xaxis()
         modest.axes.invert_xaxis()
