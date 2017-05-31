@@ -135,7 +135,7 @@ def test_zoom_out():
     modest.axes.set_ylim(lohi)
     axim.axes.set_ylim(lohi)
 
-    check('zoom_out', modest.axes, axim.axes, thresh=0.3)
+    check('zoom_out', modest.axes, axim.axes, thresh=0.4)
 
 
 INTRP_METHODS = ('nearest', 'bilinear', 'bicubic',
