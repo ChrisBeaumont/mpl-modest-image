@@ -14,8 +14,8 @@ env:
   global:
     - SETUP_XVFB=True
     - QT_API=pyqt
-    - CONDA_DEPENDENCIES='matplotlib coverage pytest-cov'
-    - PIP_DEPENDENCIES='coveralls'
+    - CONDA_DEPENDENCIES='matplotlib'
+    - PIP_DEPENDENCIES='coveralls coverage pytest-cov'
 
 install:
   - git clone git://github.com/astropy/ci-helpers.git
