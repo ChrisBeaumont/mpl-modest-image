@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+import itertools
 import pytest
 
 from matplotlib import pyplot as plt
@@ -26,16 +27,20 @@ def default_data():
     return _data
 
 
-def init(img_cls, data):
+def init(img_cls, data, origin='upper', extent=None):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    artist = img_cls(ax, data=data)
+    artist = img_cls(ax, data=data, origin=origin, interpolation='nearest', extent=extent)
     ax.add_artist(artist)
     ax.set_aspect('equal')
     artist.norm.vmin = -1
     artist.norm.vmax = 1
-    ax.set_xlim(0, data.shape[1])
-    ax.set_ylim(0, data.shape[0])
+    if extent is None:
+        ax.set_xlim(0, data.shape[1])
+        ax.set_ylim(0, data.shape[0])
+    else:
+        ax.set_xlim(min(extent[:2]), max(extent[:2]))
+        ax.set_ylim(min(extent[2:]), max(extent[2:]))
 
     return artist
 
@@ -74,8 +79,9 @@ def check(label, modest, axes, thresh=0):
     axes.figure.canvas.draw()
     modest.figure.canvas.draw()
 
-    modest.figure.savefig(modest_label + '.pdf')
-    axes.figure.savefig(axes_label + '.pdf')
+    if rms >= thresh:
+        modest.figure.savefig(modest_label + '.pdf')
+        axes.figure.savefig(axes_label + '.pdf')
 
     assert rms < thresh
 
@@ -225,21 +231,47 @@ def test_get_array():
     np.testing.assert_array_equal(modest.get_array(),
                                   ax.get_array())
 
-def test_extent():
-    """extent"""
+
+EXTENT_OPTIONS = itertools.product(['upper', 'lower'],
+                                   [None, [1., 7., -1., 5.]],
+                                   ['', 'x', 'y', 'xy'])
+
+
+@pytest.mark.parametrize(('origin', 'extent', 'flip'), EXTENT_OPTIONS)
+def test_extent(origin, extent, flip):
+
     data = default_data()
-    modest = init(ModestImage, data)
-    axim = init(mi.AxesImage, data)
-    
-    modest.axes.set_autoscale_on(True) # Reactivate autoscale
-    axim.axes.set_autoscale_on(True)
-    
-    extent = [0.0, 5.0, 0.0, 5.0]
-    modest.set_extent(extent)
-    axim.set_extent(extent)
-    check('extent', modest.axes, axim.axes, thresh=0.3)
-    
-    extent = [0.0, 50.0, 0.0, 5.0]
-    modest.set_extent(extent)
-    axim.set_extent(extent)
-    check('extent', modest.axes, axim.axes, thresh=0.8)
+
+    # Use extent= keyword for imshow
+
+    modest = init(ModestImage, data, origin=origin, extent=extent)
+    axim = init(mi.AxesImage, data, origin=origin, extent=extent)
+
+    if 'x' in flip:
+        axim.axes.invert_xaxis()
+        modest.axes.invert_xaxis()
+    if 'y' in flip:
+        axim.axes.invert_yaxis()
+        modest.axes.invert_yaxis()
+
+    check('extent1_{0}_{1}_{2}'.format(origin, extent is not None, flip),
+          modest.axes, axim.axes, thresh=0.0)
+
+    # Try using set_extent
+
+    modest = init(ModestImage, data, origin=origin)
+    axim = init(mi.AxesImage, data, origin=origin)
+
+    if 'x' in flip:
+        axim.axes.invert_xaxis()
+        modest.axes.invert_xaxis()
+    if 'y' in flip:
+        axim.axes.invert_yaxis()
+        modest.axes.invert_yaxis()
+
+    if extent is not None:
+        modest.set_extent(extent)
+        axim.set_extent(extent)
+
+    check('extent2_{0}_{1}_{2}'.format(origin, extent is not None, flip),
+          modest.axes, axim.axes, thresh=0.0)

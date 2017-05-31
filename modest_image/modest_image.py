@@ -86,8 +86,8 @@ class ModestImage(mi.AxesImage):
         if self._pixel2world_cache is None:
 
             # Pre-compute affine transforms to convert between the 'world'
-            # coordinates of the axes (what is shown by the axis labels) to 'pixel'
-            # coordinates in the underlying array.
+            # coordinates of the axes (what is shown by the axis labels) to
+            # 'pixel' coordinates in the underlying array.
 
             extent = self._full_extent
 
@@ -98,6 +98,8 @@ class ModestImage(mi.AxesImage):
             else:
 
                 self._pixel2world_cache = Affine2D()
+
+                self._pixel2world.translate(+0.5, +0.5)
 
                 self._pixel2world.scale((extent[1] - extent[0]) / self._full_res.shape[1],
                                         (extent[3] - extent[2]) / self._full_res.shape[0])
@@ -143,7 +145,7 @@ class ModestImage(mi.AxesImage):
         # We now determine the extent of the subset of the image, by determining
         # it first in pixel space, and converting it to the 'world' coordinates.
 
-        if self.origin == 'upper':
+        if self.origin == 'upper' and self._full_extent is None:
             xmin, xmax, ymin, ymax = x0 - .5, x1 - .5, y1 - .5, y0 - .5
         else:
             xmin, xmax, ymin, ymax = x0 - .5, x1 - .5, y0 - .5, y1 - .5
