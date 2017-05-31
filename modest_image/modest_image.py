@@ -145,6 +145,10 @@ class ModestImage(mi.AxesImage):
         # We now determine the extent of the subset of the image, by determining
         # it first in pixel space, and converting it to the 'world' coordinates.
 
+        # See https://github.com/matplotlib/matplotlib/issues/8693 for a
+        # demonstration of why origin='upper' and extent=None needs to be
+        # special-cased.
+
         if self.origin == 'upper' and self._full_extent is None:
             xmin, xmax, ymin, ymax = x0 - .5, x1 - .5, y1 - .5, y0 - .5
         else:
