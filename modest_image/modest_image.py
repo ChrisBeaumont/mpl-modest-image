@@ -242,8 +242,7 @@ def imshow(axes, X, cmap=None, norm=None, aspect=None,
     # to tightly fit the image, regardless of dataLim.
     im.set_extent(im.get_extent())
 
-    axes.images.append(im)
-    im._remove_method = lambda h: axes.images.remove(h)
+    axes.add_image(im)
 
     return im
 
