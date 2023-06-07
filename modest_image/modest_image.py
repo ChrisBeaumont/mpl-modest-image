@@ -52,12 +52,12 @@ class ModestImage(mi.AxesImage):
         self._A = A
 
         if self._A.dtype != np.uint8 and not np.can_cast(self._A.dtype,
-                                                         np.float):
+                                                         float):
             raise TypeError("Image data can not convert to float")
 
         if (self._A.ndim not in (2, 3) or
                 (self._A.ndim == 3 and self._A.shape[-1] not in (3, 4))):
-                raise TypeError("Invalid dimensions for image data")
+            raise TypeError("Invalid dimensions for image data")
 
         self.invalidate_cache()
 
@@ -242,8 +242,7 @@ def imshow(axes, X, cmap=None, norm=None, aspect=None,
     # to tightly fit the image, regardless of dataLim.
     im.set_extent(im.get_extent())
 
-    axes.images.append(im)
-    im._remove_method = lambda h: axes.images.remove(h)
+    axes.add_image(im)
 
     return im
 
